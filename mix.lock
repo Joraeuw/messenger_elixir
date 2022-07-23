@@ -1,0 +1,13 @@
+%{
+  "amnesia": {:git, "https://github.com/meh/amnesia.git", "bb35062afb8a5cf4101ae7b57122320f28243543", []},
+  "bandit": {:hex, :bandit, "0.5.0", "188c1d3ade5760eded7a08798df9e231c8f07e406505a913629dd217b6fa96a7", [:mix], [{:hpax, "~> 0.1.1", [hex: :hpax, repo: "hexpm", optional: false]}, {:plug, "~> 1.12", [hex: :plug, repo: "hexpm", optional: false]}, {:thousand_island, "~> 0.5.7", [hex: :thousand_island, repo: "hexpm", optional: false]}], "hexpm", "2e062f7e9b72e1bfba7bceecfb7566700a8fbe71f91dd7add6c71f584e67d445"},
+  "dep_from_git": {:git, "https://github.com/meh/amnesia.git", "bb35062afb8a5cf4101ae7b57122320f28243543", []},
+  "exquisite": {:hex, :exquisite, "0.1.10", "e3ca4f8b812696a40a6da3bcd4e9861cef879ee2eb239d5485b0f96885fc9fba", [:mix], [], "hexpm", "0af9319851f1e21dd4adab812c82247f05e11cc19820fa17cc74afd696e2313c"},
+  "hpax": {:hex, :hpax, "0.1.1", "2396c313683ada39e98c20a75a82911592b47e5c24391363343bde74f82396ca", [:mix], [], "hexpm", "0ae7d5a0b04a8a60caf7a39fcf3ec476f35cc2cc16c05abea730d3ce6ac6c826"},
+  "mime": {:hex, :mime, "2.0.2", "0b9e1a4c840eafb68d820b0e2158ef5c49385d17fb36855ac6e7e087d4b1dcc5", [:mix], [], "hexpm", "e6a3f76b4c277739e36c2e21a2c640778ba4c3846189d5ab19f97f126df5f9b7"},
+  "plug": {:hex, :plug, "1.13.6", "187beb6b67c6cec50503e940f0434ea4692b19384d47e5fdfd701e93cadb4cc2", [:mix], [{:mime, "~> 1.0 or ~> 2.0", [hex: :mime, repo: "hexpm", optional: false]}, {:plug_crypto, "~> 1.1.1 or ~> 1.2", [hex: :plug_crypto, repo: "hexpm", optional: false]}, {:telemetry, "~> 0.4.3 or ~> 1.0", [hex: :telemetry, repo: "hexpm", optional: false]}], "hexpm", "02b9c6b9955bce92c829f31d6284bf53c591ca63c4fb9ff81dfd0418667a34ff"},
+  "plug_crypto": {:hex, :plug_crypto, "1.2.2", "05654514ac717ff3a1843204b424477d9e60c143406aa94daf2274fdd280794d", [:mix], [], "hexpm", "87631c7ad914a5a445f0a3809f99b079113ae4ed4b867348dd9eec288cecb6db"},
+  "telemetry": {:hex, :telemetry, "1.1.0", "a589817034a27eab11144ad24d5c0f9fab1f58173274b1e9bae7074af9cbee51", [:rebar3], [], "hexpm", "b727b2a1f75614774cff2d7565b64d0dfa5bd52ba517f16543e6fc7efcc0df48"},
+  "thousand_island": {:hex, :thousand_island, "0.5.9", "b1b8403c93be0bd87944bd9b1bebac694041cc85cb7bd3e24ad6352c4ace0063", [:mix], [{:telemetry, "~> 1.0", [hex: :telemetry, repo: "hexpm", optional: false]}], "hexpm", "cd689ed867897ef0165b8e5495673c77cbee32e13b7b3cb253cf417b584a3218"},
+  "uuid": {:hex, :uuid, "1.1.8", "e22fc04499de0de3ed1116b770c7737779f226ceefa0badb3592e64d5cfb4eb9", [:mix], [], "hexpm", "c790593b4c3b601f5dc2378baae7efaf5b3d73c4c6456ba85759905be792f2ac"},
+}
