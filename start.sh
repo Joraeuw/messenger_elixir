@@ -1,10 +1,10 @@
 #!/bin/bash
-export AMNESIA_DIR=../db
+# export AMNESIA_DIR=../db
 
 if [ $1 == "dev" ] ; then
   iex -S mix
 fi
-
+ 
 if [ $1 == "all" ] ; then
   echo "Building release..."
   mix release
@@ -48,4 +48,8 @@ fi
 if [ $1 == "test" ] ; then
   echo "testing..."
   mix test --trace
+fi
+
+if [ $1 == "deps" ] ; then
+  mix deps.get
 fi

@@ -1,3 +1,6 @@
 import Config
 
-config :amnesia, dir: System.get_env("AMNESIA_DIR")
+config :amnesia,
+  dir: "../db",
+  # 1 minute | :no_limit
+  edit_after: 1 * 60 * 1000
