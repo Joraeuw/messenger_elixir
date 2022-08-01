@@ -4,12 +4,83 @@ defmodule Storage.Users do
   require Exquisite
   require Database.User
 
+  @second 1000
+  @minute @second * 60
+
   alias Database.User
 
-  def get_by_credentials(username, password, props) do
-    user = User.match!(username: username, hashed_password: :crypto.hash(:sha256, password))
+  def attempt_manager(user, flag) do
+    IO.inspect(user.attempts)
 
-    construct_user_p(hd(user.values)) |> get_props(props)
+    if flag == :wrong_password do
+      if user.attempts == 4 do
+        {:set_attempt_time, user}
+      else
+        if is_attempt_allowed?(user) do
+          :wrong_password
+        else
+          :too_many_attempts
+        end
+      end
+    else
+      if is_attempt_allowed?(user) do
+        :ok
+      else
+        :too_many_attempts
+      end
+    end
+  end
+
+  def set_next_attempt_time(user) do
+    Amnesia.transaction do
+      Map.replace!(user, :next_attempt_time, System.monotonic_time() + @minute)
+      |> User.write()
+    end
+  end
+
+  def is_attempt_allowed?(user) do
+    user.next_attempt_time > System.monotonic_time()
+  end
+
+  def reset_attempts(user) do
+    Amnesia.transaction do
+      Map.replace!(user, :attempts, 0) |> User.write()
+    end
+  end
+
+  def add_failed_attempt(email) do
+    Amnesia.transaction do
+      user = User.match!(email: email)
+
+      case user do
+        nil ->
+          {:error, :no_such_user}
+
+        _ ->
+          hd(user.values)
+          |> construct_user_p()
+          |> Map.update(:attempts, 0, &(&1 + 1))
+          |> User.write()
+          |> then(&{&1, :wrong_password})
+      end
+    end
+  end
+
+  def get_by_credentials(email, password, props) do
+    {user, _} = exists?(email, password)
+    get_props(user, props)
+  end
+
+  def exists?(email, password) do
+    user = User.match!(email: email, hashed_password: :crypto.hash(:sha256, password))
+
+    case user do
+      nil ->
+        add_failed_attempt(email)
+
+      _ ->
+        hd(user.values) |> construct_user_p() |> then(&{&1, :user_exists})
+    end
   end
 
   def register(username, email, password, bio) do
@@ -30,7 +101,9 @@ defmodule Storage.Users do
             friends_ids: [],
             pending_messages: [],
             pending_friend_requests: [],
-            time_created: System.os_time()
+            time_created: System.monotonic_time(),
+            attempts: 0,
+            next_attempt_time: 0
           }
           |> User.write()
         end
@@ -88,13 +161,14 @@ defmodule Storage.Users do
   def remove_friend(self_id, friend_id) do
     remove_friend_p(self_id, friend_id)
     remove_friend_p(friend_id, self_id)
+    Storage.Messages.remove_messages_between(self_id, friend_id)
   end
 
   defp remove_friend_p(self_id, friend_id) do
     Amnesia.transaction do
       usr = get(friend_id)
 
-      Map.replace!(usr, :friends_ids, Enum.filter(usr.friends_ids, &(&1 != self_id)))
+      Map.replace!(usr, :friends_ids, Enum.reject(usr.friends_ids, &(&1 == self_id)))
       |> User.write()
     end
   end
@@ -161,6 +235,10 @@ defmodule Storage.Users do
     messages
   end
 
+  def read_pending_messages(self_id) do
+    change_status_of_pending(self_id, :seen)
+  end
+
   def receive_pending_messages(self_id, sender_id) do
     change_status_of_pending(self_id, sender_id, :received)
   end
@@ -185,6 +263,35 @@ defmodule Storage.Users do
     |> Enum.filter(fn msg ->
       cond do
         msg.sender_id == sender_id && msg.can_see in [:recipient, :all] ->
+          Storage.Messages.change_status(msg.message_id, status)
+          true
+
+        true ->
+          false
+      end
+    end)
+  end
+
+  defp change_status_of_pending(self_id, status) when status in [:received, :seen] do
+    %{pending_messages: messages} = get_props(self_id, [:pending_messages])
+
+    Enum.map(
+      messages,
+      &Storage.Messages.get_props(&1, [
+        :message_id,
+        :message,
+        :sender_id,
+        :recipient_id,
+        :time_sent,
+        :last_edit,
+        :time_seen,
+        :status,
+        :can_see
+      ])
+    )
+    |> Enum.filter(fn msg ->
+      cond do
+        msg.can_see in [:recipient, :all] ->
           Storage.Messages.change_status(msg.message_id, status)
           true
 
@@ -247,7 +354,7 @@ defmodule Storage.Users do
 
   def construct_user_p(
         {Database.User, id, username, email, bio, password, pending_messages, friends_ids,
-         pending_req, time_created}
+         pending_req, time_created, attempts, next_attempt_time}
       ) do
     %User{
       id: id,
@@ -258,7 +365,9 @@ defmodule Storage.Users do
       pending_messages: pending_messages,
       friends_ids: friends_ids,
       pending_friend_requests: pending_req,
-      time_created: time_created
+      time_created: time_created,
+      attempts: attempts,
+      next_attempt_time: next_attempt_time
     }
   end
 end

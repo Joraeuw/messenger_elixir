@@ -15,6 +15,7 @@ defmodule Messanger.Router.Secure do
 
   get "/" do
     {:ok, response} = JSON.encode(conn.assigns[:current_user])
+    IO.inspect(response)
     send_resp(conn, 200, response)
   end
 
@@ -111,9 +112,9 @@ defmodule Messanger.Router.Secure do
   end
 
   defp auth(conn, _opts) do
-    with {username, pass} <- Plug.BasicAuth.parse_basic_auth(conn),
+    with {email, pass} <- Plug.BasicAuth.parse_basic_auth(conn),
          %{} = user <-
-           Users.get_by_credentials(username, pass, [
+           Users.get_by_credentials(email, pass, [
              :id,
              :email,
              :bio,

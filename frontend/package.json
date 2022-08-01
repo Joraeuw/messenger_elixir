@@ -1,12 +1,23 @@
 {
+  "name": "learn-starter",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
-  "devDependencies": {
-    "nuxt": "3.0.0-rc.6"
+  "dependencies": {
+    "@emotion/react": "^11.10.0",
+    "@emotion/server": "^11.10.0",
+    "@emotion/styled": "^11.10.0",
+    "@mui/icons-material": "^5.8.4",
+    "@mui/material": "^5.9.2",
+    "axios": "^0.27.2",
+    "next": "^12.2.3",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "sass": "^1.54.0",
+    "scss": "^0.2.4"
   }
 }

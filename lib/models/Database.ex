@@ -13,7 +13,9 @@ defdatabase Database do
       :friends_ids,
       # {sender_id | self.id, :from_sender | from_self}
       :pending_friend_requests,
-      :time_created
+      :time_created,
+      :attempts,
+      :next_attempt_time
     ],
     type: :set
   )

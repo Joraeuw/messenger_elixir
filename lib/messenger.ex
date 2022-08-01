@@ -1,8 +1,4 @@
 defmodule Messenger do
-  def hello do
-    Application.get_env(:amnesia, :dir, "NO DIR")
-  end
-
   def start(_type, _agrs) do
     children = [
       {Bandit, plug: Messanger.Router, scheme: :http, options: [port: 8080]}

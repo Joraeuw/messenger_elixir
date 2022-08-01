@@ -1,42 +1,25 @@
-# Nuxt 3 Minimal Starter
+# NextJS Chat Tutorial
 
-Look at the [nuxt 3 documentation](https://v3.nuxtjs.org) to learn more.
+<img 
+    src="https://raw.githubusercontent.com/alamorre/nextjs-chat-app/main/assets/nextjs-chat-tutorial.png" 
+    width="75%" 
+    height="100%"
+/>
+
+This project is powered by [Chat Engine](https://chatengine.io).
+
+Video Tutorial is [here](https://chatengine.io).
+
+For the finished version of this project, go to [the last branch]().
 
 ## Setup
 
-Make sure to install the dependencies:
+First, go to [Chat Engine](https://chatengine.io) and create a account and project.
 
-```bash
-# yarn
-yarn install
+Find the Private Key `c2f82e63-9978-4c5c-9c17-8b0dec845dc6` and Project ID `b60a6d8b-d377-477e-af88-e47de35b3e89` then replace the values with your API keys.
 
-# npm
-npm install
+The project has been deleted so those keys won't work anymore.
 
-# pnpm
-pnpm install --shamefully-hoist
-```
+### `yarn dev`
 
-## Development Server
-
-Start the development server on http://localhost:3000
-
-```bash
-npm run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-npm run build
-```
-
-Locally preview production build:
-
-```bash
-npm run preview
-```
-
-Checkout the [deployment documentation](https://v3.nuxtjs.org/guide/deploy/presets) for more information.
+Install everything with `yarn` then run `yarn dev` to get up and running.

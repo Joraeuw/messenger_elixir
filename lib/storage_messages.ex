@@ -7,7 +7,7 @@ defmodule Storage.Messages do
   alias Database.Message
 
   def add(self_id, recipient_id, message) do
-    time = System.os_time()
+    time = System.monotonic_time()
 
     Storage.Users.are_friends?(self_id, recipient_id)
     |> if do
@@ -34,13 +34,6 @@ defmodule Storage.Messages do
     end
   end
 
-  # def read_pending(self_id) do
-  #   Amnesia.transaction do
-
-  #     Storage.Users.read_pending_messages(self_id)
-  #   end
-  # end
-
   def get(id) do
     Amnesia.transaction do
       Message.read(id)
@@ -54,29 +47,15 @@ defmodule Storage.Messages do
     end
   end
 
-  # def get(id) do
-  #   Amnesia.transaction do
-  #     Message.read(id)
-  #   end
-  #   |> then(fn msg -> {msg, Enum.all?(msg, &match?(%Message{}, &1))} end)
-  #   |> case do
-  #     {msg, true} ->
-  #       msg
-
-  #     _ ->
-  #       {:error, :not_found}
-  #   end
-  # end
-
   def edit(editor_id, message_id, message) do
     msg = get(message_id)
 
     Application.get_env(:amnesia, :edit_after, 0)
     |> then(
-      &if &1 + msg.editor_id > System.os_time() && msg.sender_id == editor_id do
+      &if &1 + msg.editor_id > System.monotonic_time() && msg.sender_id == editor_id do
         Amnesia.transaction do
           Map.replace(msg, :message, message)
-          |> Map.replace(:last_edit, System.os_time())
+          |> Map.replace(:last_edit, System.monotonic_time())
           |> Message.write()
         end
       end
@@ -88,7 +67,8 @@ defmodule Storage.Messages do
 
     Application.get_env(:amnesia, :unsend_after, 0)
     |> then(
-      &if msg.sender_id == self_id && &1 + msg.time_created > System.os_time() do
+      &if msg.sender_id == self_id && &1 + msg.time_created > System.monotonic_time() &&
+            msg.status != :seen do
         Amnesia.transaction do
           Message.delete(message_id)
         end
@@ -107,7 +87,7 @@ defmodule Storage.Messages do
         :seen ->
           get(self_id)
           |> Map.replace!(:status, :seen)
-          |> Map.replace!(:time_seen, System.os_time())
+          |> Map.replace!(:time_seen, System.monotonic_time())
           |> Message.write()
       end
     end
@@ -155,6 +135,21 @@ defmodule Storage.Messages do
     end
     |> filter_messages(self_id)
     |> Enum.map(&construct_message/1)
+  end
+
+  def remove_messages_between(self_id, sender_id) do
+    with first <- Message.match!(sender_id: self_id, recipient_id: sender_id),
+         second <-
+           Message.match!(sender_id: sender_id, recipient_id: self_id) do
+      case {first, second} do
+        {nil, nil} -> []
+        {_, nil} -> first.values
+        {nil, _} -> second.values
+        _ -> Enum.concat(first.values, second.values)
+      end
+    end
+    |> Enum.map(&construct_message/1)
+    |> Enum.each(&Message.delete(&1.message_id))
   end
 
   def filter_messages(messages, self_id) do

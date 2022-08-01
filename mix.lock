@@ -1,6 +1,7 @@
 %{
   "amnesia": {:git, "https://github.com/meh/amnesia.git", "bb35062afb8a5cf4101ae7b57122320f28243543", []},
   "bandit": {:hex, :bandit, "0.5.0", "188c1d3ade5760eded7a08798df9e231c8f07e406505a913629dd217b6fa96a7", [:mix], [{:hpax, "~> 0.1.1", [hex: :hpax, repo: "hexpm", optional: false]}, {:plug, "~> 1.12", [hex: :plug, repo: "hexpm", optional: false]}, {:thousand_island, "~> 0.5.7", [hex: :thousand_island, repo: "hexpm", optional: false]}], "hexpm", "2e062f7e9b72e1bfba7bceecfb7566700a8fbe71f91dd7add6c71f584e67d445"},
+  "corsica": {:hex, :corsica, "1.2.0", "5774cb77fd1d66ab89ffc2f04b2249f8e386bc37790a9f4bf101330ca247c02d", [:mix], [{:plug, "~> 1.0", [hex: :plug, repo: "hexpm", optional: false]}], "hexpm", "c71f870555ce7a3eded55bbe937234cc48c546e73ce75745df9f59531687a759"},
   "dep_from_git": {:git, "https://github.com/meh/amnesia.git", "bb35062afb8a5cf4101ae7b57122320f28243543", []},
   "exquisite": {:hex, :exquisite, "0.1.10", "e3ca4f8b812696a40a6da3bcd4e9861cef879ee2eb239d5485b0f96885fc9fba", [:mix], [], "hexpm", "0af9319851f1e21dd4adab812c82247f05e11cc19820fa17cc74afd696e2313c"},
   "hpax": {:hex, :hpax, "0.1.1", "2396c313683ada39e98c20a75a82911592b47e5c24391363343bde74f82396ca", [:mix], [], "hexpm", "0ae7d5a0b04a8a60caf7a39fcf3ec476f35cc2cc16c05abea730d3ce6ac6c826"},
