@@ -15,7 +15,6 @@ defmodule Messanger.Router.Secure do
 
   get "/" do
     {:ok, response} = JSON.encode(conn.assigns[:current_user])
-    IO.inspect(response)
     send_resp(conn, 200, response)
   end
 

@@ -7,30 +7,28 @@ defmodule Storage.Messages do
   alias Database.Message
 
   def add(self_id, recipient_id, message) do
-    time = System.monotonic_time()
+    time = Time.utc_now()
 
     Storage.Users.are_friends?(self_id, recipient_id)
     |> if do
       message_id = UUID.uuid1()
 
-      msg =
-        Amnesia.transaction do
-          %Message{
-            message_id: message_id,
-            message: message,
-            sender_id: self_id,
-            recipient_id: recipient_id,
-            time_sent: time,
-            last_edit: time,
-            time_seen: 0,
-            status: :sent,
-            can_see: :all
-          }
-          |> Message.write()
-        end
-
       Storage.Users.add_pending_message(recipient_id, message_id)
-      msg |> IO.inspect()
+
+      Amnesia.transaction do
+        %Message{
+          message_id: message_id,
+          message: message,
+          sender_id: self_id,
+          recipient_id: recipient_id,
+          time_sent: time,
+          last_edit: time,
+          time_seen: 0,
+          status: :sent,
+          can_see: :all
+        }
+        |> Message.write()
+      end
     end
   end
 
@@ -52,10 +50,11 @@ defmodule Storage.Messages do
 
     Application.get_env(:amnesia, :edit_after, 0)
     |> then(
-      &if &1 + msg.editor_id > System.monotonic_time() && msg.sender_id == editor_id do
+      &if Time.compare(Time.add(msg.last_edit, &1, :minute), Time.utc_now()) == :gt &&
+            msg.sender_id == editor_id do
         Amnesia.transaction do
           Map.replace(msg, :message, message)
-          |> Map.replace(:last_edit, System.monotonic_time())
+          |> Map.replace(:last_edit, Time.utc_now())
           |> Message.write()
         end
       end
@@ -67,13 +66,14 @@ defmodule Storage.Messages do
 
     Application.get_env(:amnesia, :unsend_after, 0)
     |> then(
-      &if msg.sender_id == self_id && &1 + msg.time_created > System.monotonic_time() &&
+      &if msg.sender_id == self_id &&
+            Time.compare(Time.add(msg.time_created, &1, :minute), Time.utc_now()) == :gt &&
             msg.status != :seen do
         Amnesia.transaction do
           Message.delete(message_id)
         end
 
-        Storage.Users.remove_pending_messages(msg.ricipient_id, message_id)
+        Storage.Users.remove_pending_messages(msg.recipient_id, message_id)
       end
     )
   end
@@ -87,7 +87,7 @@ defmodule Storage.Messages do
         :seen ->
           get(self_id)
           |> Map.replace!(:status, :seen)
-          |> Map.replace!(:time_seen, System.monotonic_time())
+          |> Map.replace!(:time_seen, Time.utc_now())
           |> Message.write()
       end
     end

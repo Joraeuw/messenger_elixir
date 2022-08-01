@@ -19,22 +19,18 @@ defmodule Messanger.Router do
 
   post "/login" do
     with {email, pass} <- Plug.BasicAuth.parse_basic_auth(conn),
-         {%Database.User{} = user, flag} <- Storage.Users.exists?(email, pass),
-         :ok <- Storage.Users.attempt_manager(user, flag) do
-      Storage.Users.reset_attempts(user)
+         {:ok, _user} <- Storage.Users.login(email, pass) do
       send_resp(conn, 200, "Authorized")
     else
-      {:set_attempt_time, user} ->
-        Storage.Users.set_next_attempt_time(user)
-        |> Storage.Users.reset_attempts()
-
+      {:error, :too_many_attempts} ->
         send_resp(conn, 401, "Too many attempts. Wait for a minute.")
 
-      :too_many_attempts ->
-        send_resp(conn, 401, "Too many attempts. Wait for a minute.")
-
-      _ ->
+      {:error, :unauthorized} ->
         send_resp(conn, 401, "Unauthorized")
+
+      error ->
+        IO.inspect(error)
+        send_resp(conn, 500, "Internal server error")
     end
   end
 

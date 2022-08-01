@@ -1,5 +1,13 @@
 #!/bin/bash
-# export AMNESIA_DIR=../db
+
+
+if [ $1 == "start" ] ; then
+  echo "Getting deps..."
+  mix deps.get
+  echo "Creating DB..."
+  mix amnesia.create -d Database --disk
+  iex -S mix
+fi
 
 if [ $1 == "dev" ] ; then
   iex -S mix
@@ -17,7 +25,7 @@ if [ $1 == "all" ] ; then
 fi
 
 if [ $1 == "create_db" ] ; then
-  mix amnesia.create -d Database --disk -name "messanger@HP455G8"
+  mix amnesia.create -d Database --disk
 fi
 if [ $1 == "clean_db" ] ; then
   rm -rf ./Mnesia.nonode@nohost
@@ -29,7 +37,7 @@ if [ $1 == "build" ] ; then
   echo "Release built"
 fi
 
-if [ $1 == "start" ] ; then
+if [ $1 == "node-start" ] ; then
   echo "Node started"
   _build/dev/rel/messenger/bin/messenger start
   echo "Node stopped"
