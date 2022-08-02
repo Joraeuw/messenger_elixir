@@ -19,7 +19,10 @@ defmodule StorageTest do
         "Simp"
       )
 
-    {first_user, second_user}
+    first_user = hd(Database.User.match!(email: "joraeuw@gmail.com", password: "password").values)
+    second_user = hd(Database.User.match!(email: "ivo@gmail.com", password: "password1").values)
+
+    {Storage.Users.construct_user_p(first_user), Storage.Users.construct_user_p(second_user)}
   end
 
   defp create_four_users() do
@@ -41,8 +44,8 @@ defmodule StorageTest do
 
     third_user =
       Storage.Users.register(
-        "mike",
-        "mike@gmail.com",
+        "doby",
+        "doby@gmail.com",
         "password2",
         "I could"
       )
@@ -55,24 +58,31 @@ defmodule StorageTest do
         "I couldn't"
       )
 
-    {first_user, second_user, third_user, fourth_user}
-  end
+    first_user = hd(Database.User.match!(email: "joraeuw@gmail.com", password: "password").values)
+    second_user = hd(Database.User.match!(email: "ivo@gmail.com", password: "password1").values)
+    third_user = hd(Database.User.match!(email: "doby@gmail.com", password: "password2").values)
 
-  test "dir set correctly" do
-    Storage.Users.remove_all()
-    assert Messenger.hello() == "../db"
+    fourth_user =
+      hd(Database.User.match!(email: "magic_mikie@gmail.com", password: "password3").values)
+
+    {Storage.Users.construct_user_p(first_user), Storage.Users.construct_user_p(second_user),
+     Storage.Users.construct_user_p(third_user), Storage.Users.construct_user_p(fourth_user)}
   end
 
   test "creates user" do
     Storage.Users.remove_all()
 
-    user =
+    {:ok, :registered} =
       Storage.Users.register(
         "jora",
         "joraeuw@gmail.com",
         "password",
         "The darkest minds tend to hide behind the most unlikely faces"
       )
+
+    user =
+      hd(Database.User.match!(email: "joraeuw@gmail.com", password: "password").values)
+      |> Storage.Users.construct_user_p()
 
     assert user == Storage.Users.get(user.id)
   end
@@ -107,13 +117,17 @@ defmodule StorageTest do
   test "gets props" do
     Storage.Users.remove_all()
 
-    user =
+    {:ok, :registered} =
       Storage.Users.register(
         "jora",
         "joraeuw@gmail.com",
         "password",
         "The darkest minds tend to hide behind the most unlikely faces"
       )
+
+    user =
+      hd(Database.User.match!(email: "joraeuw@gmail.com", password: "password").values)
+      |> Storage.Users.construct_user_p()
 
     assert Storage.Users.get_props(user.id, [:id, :username, :email]) == %{
              id: user.id,
@@ -168,13 +182,17 @@ defmodule StorageTest do
   test "deletes user" do
     Storage.Users.remove_all()
 
-    user =
+    {:ok, :registered} =
       Storage.Users.register(
         "jora",
         "joraeuw@gmail.com",
         "password",
         "The darkest minds tend to hide behind the most unlikely faces"
       )
+
+    user =
+      hd(Database.User.match!(email: "joraeuw@gmail.com", password: "password").values)
+      |> Storage.Users.construct_user_p()
 
     Storage.Users.delete(user.id)
 
@@ -204,10 +222,9 @@ defmodule StorageTest do
     {first_user, second_user, third_user, fourth_user} = create_four_users()
     Storage.Users.request_friendship(first_user.id, third_user.id)
     Storage.Users.accept_friend_request(third_user.id, first_user.id)
-    second_user = Storage.Users.get(second_user.id)
-    fourth_user = Storage.Users.get(fourth_user.id)
 
-    assert match?([second_user, fourth_user], Storage.Users.read_users(first_user.id))
+    assert Enum.sort([Storage.Users.get(fourth_user.id), Storage.Users.get(second_user.id)]) ==
+             Storage.Users.read_users(first_user.id) |> Enum.sort()
   end
 
   test "sends a message to a friend / adds a pending message" do
@@ -231,7 +248,7 @@ defmodule StorageTest do
     Storage.Users.accept_friend_request(second_user.id, first_user.id)
 
     msg = Storage.Messages.add(first_user.id, second_user.id, "Hello!")
-    msg2 = Storage.Messages.add(first_user.id, second_user.id, "How ya doin'?")
+    _msg2 = Storage.Messages.add(first_user.id, second_user.id, "How ya doin'?")
 
     %{pending_messages: pending_msgs} =
       Storage.Users.get_props(second_user.id, [:pending_messages])
@@ -243,20 +260,5 @@ defmodule StorageTest do
 
     assert !Enum.member?(pending_msgs, msg.message_id)
   end
-
-  test "select by other property" do
-    Storage.Users.remove_all()
-
-    user =
-      Storage.Users.register(
-        "jora",
-        "joraeuw@gmail.com",
-        "password",
-        "The darkest minds tend to hide behind the most unlikely faces"
-      )
-
-    got = Database.User.match!(email: "joraeuw@gmail.com")
-
-    assert Storage.Users.construct_user_p(hd(got.values)) == user
-  end
+  
 end
