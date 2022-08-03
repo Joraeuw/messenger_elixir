@@ -54,9 +54,22 @@ defmodule Messanger.Router.Secure do
   post "/friends-accept" do
     {:ok, jbody, conn} = read_body(conn)
     {:ok, body} = JSON.decode(jbody)
-
     Users.accept_friend_request(conn.assigns[:current_user].id, body["sender_id"])
     send_resp(conn, 200, "accepted")
+  end
+
+  post "/friends-deny" do
+    {:ok, jbody, conn} = read_body(conn)
+    {:ok, body} = JSON.decode(jbody)
+    Users.delete_friend_request(conn.assigns[:current_user].id, body["sender_id"])
+    send_resp(conn, 200, "denied friend request")
+  end
+
+  post "/friends-remove" do
+    {:ok, jbody, conn} = read_body(conn)
+    {:ok, body} = JSON.decode(jbody)
+    Users.remove_friend(conn.assigns[:current_user].id, body["friend_id"])
+    send_resp(conn, 200, "removed friend")
   end
 
   get "/are-friends" do
@@ -70,16 +83,15 @@ defmodule Messanger.Router.Secure do
     send_resp(conn, 200, response)
   end
 
-  post "/message/:recipient_id" do
+  post "/message/:friend_id" do
     {:ok, jbody, conn} = read_body(conn)
     {:ok, body} = JSON.decode(jbody)
-
-    Messages.add(conn.assigns[:current_user].id, recipient_id, body["message"])
+    Messages.add(conn.assigns[:current_user].id, friend_id, body["message"])
     send_resp(conn, 201, "sent")
   end
 
-  get "/message/:sender_id" do
-    messages = Users.read_pending_messages(conn.assigns[:current_user].id, sender_id)
+  get "/message/:friend_id" do
+    messages = Users.read_pending_messages(conn.assigns[:current_user].id, friend_id)
     {:ok, response} = JSON.encode(messages)
     send_resp(conn, 200, response)
   end
@@ -90,7 +102,7 @@ defmodule Messanger.Router.Secure do
     send_resp(conn, 200, response)
   end
 
-  post "/message/unsend/:message_id" do
+  post "/unsend-message/" do
     {:ok, jbody, conn} = read_body(conn)
     {:ok, body} = JSON.decode(jbody)
 
@@ -98,7 +110,7 @@ defmodule Messanger.Router.Secure do
     send_resp(conn, 202, "unsend")
   end
 
-  post "/message/delete_for_you/:message_id" do
+  post "/message/delete-for-you/" do
     {:ok, jbody, conn} = read_body(conn)
     {:ok, body} = JSON.decode(jbody)
 

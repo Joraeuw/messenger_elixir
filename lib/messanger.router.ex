@@ -2,7 +2,7 @@ defmodule Messanger.Router do
   use Plug.Router
   require Logger
 
-  plug(Corsica, origins: "http://localhost:3000", allow_headers: ["Authorization", "Content-type"])
+  plug(Corsica, origins: "*", allow_headers: ["Authorization", "Content-type"])
 
   plug(:match)
   plug(:dispatch)

@@ -67,7 +67,7 @@ defmodule Storage.Messages do
     Application.get_env(:amnesia, :unsend_after, 0)
     |> then(
       &if msg.sender_id == self_id &&
-            Time.compare(Time.add(msg.time_created, &1, :minute), Time.utc_now()) == :gt &&
+            Time.compare(Time.add(msg.time_sent, &1, :minute), Time.utc_now()) == :gt &&
             msg.status != :seen do
         Amnesia.transaction do
           Message.delete(message_id)
@@ -177,6 +177,10 @@ defmodule Storage.Messages do
     Amnesia.transaction do
       Message.foldl([], &[construct_message(&1) | &2])
     end
+  end
+
+  def remove_all do
+    Message.clear()
   end
 
   def construct_message(

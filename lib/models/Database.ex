@@ -11,7 +11,7 @@ defdatabase Database do
       :hashed_password,
       :pending_messages,
       :friends_ids,
-      # {sender_id | self.id, :from_sender | from_self}
+      # {sender.id | self.id, :from_sender | :from_self}
       :pending_friend_requests,
       :time_created,
       :attempts,

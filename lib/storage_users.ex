@@ -70,8 +70,13 @@ defmodule Storage.Users do
   end
 
   def get_by_credentials(email, password, props) do
-    user = User.match!(email: email, hashed_password: :crypto.hash(:sha256, password))
-    if user != nil, do: hd(user.values) |> construct_user_p() |> get_props(props)
+    case login(email, password) do
+      {:ok, user} ->
+        user |> get_props(props)
+
+      _ ->
+        {:error, :unauthorized}
+    end
   end
 
   def register(username, email, password, bio) do
@@ -130,10 +135,10 @@ defmodule Storage.Users do
   end
 
   def request_friendship(self_id, friend_id) do
-    with %User{} = self <-
-           get(self_id),
-         %User{} = friend <-
-           get(friend_id) do
+    with %User{} = self <- get(self_id),
+         %User{} = friend <- get(friend_id),
+         false <- are_friends?(self, friend),
+         false <- has_already_requested?(self, friend) do
       {Amnesia.transaction do
          Map.update!(self, :pending_friend_requests, &[{friend_id, :from_self} | &1])
          |> User.write()
@@ -143,10 +148,22 @@ defmodule Storage.Users do
          |> User.write()
        end}
       |> case do
-        {%User{}, %User{}} -> {:ok, :accepted}
+        {%User{}, %User{}} -> {:ok, :requested}
         other -> {:error, other}
       end
     end
+  end
+
+  defp has_already_requested?(usera, userb)
+       when is_struct(usera, User) and is_struct(userb, User) do
+    !is_nil(Enum.find(userb.pending_friend_requests, &(elem(&1, 0) == usera.id))) &&
+      !is_nil(Enum.find(usera.pending_friend_requests, &(elem(&1, 0) == userb.id)))
+  end
+
+  def are_friends?(usera, userb)
+      when is_struct(usera, User) and is_struct(userb, User) do
+    Enum.member?(usera.friends_ids, userb.id) &&
+      Enum.member?(userb.friends_ids, usera.id)
   end
 
   def are_friends?(usera_id, userb_id) do
@@ -178,7 +195,7 @@ defmodule Storage.Users do
 
   def read_pending_messages(self_id, sender_id) do
     messages = change_status_of_pending_p(self_id, sender_id, :seen)
-    remove_pending_messages(self_id, &Enum.map(&1, fn message -> message.message_id end))
+    remove_pending_messages(self_id, Enum.map(messages, fn message -> message.message_id end))
     messages
   end
 
@@ -265,10 +282,6 @@ defmodule Storage.Users do
     )
   end
 
-  def remove_all do
-    User.clear()
-  end
-
   def read_users(self_id) do
     [self_id | Map.get(get(self_id), :friends_ids, [])]
     |> then(
@@ -297,6 +310,10 @@ defmodule Storage.Users do
       Map.update!(get(self_id), :pending_messages, &List.delete(&1, message_id))
       |> User.write()
     end
+  end
+
+  def remove_all do
+    User.clear()
   end
 
   def delete_friend_request(self_id, friend_id) do
